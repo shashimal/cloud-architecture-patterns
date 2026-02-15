@@ -1,0 +1,91 @@
+{
+    "Comment": "Scatter and Gather pattern using Step Functions Map state",
+    "StartAt": "ScatterPhase",
+    "States": {
+        "ScatterPhase": {
+            "Type": "Map",
+            "ItemsPath": "$.items",
+            "MaxConcurrency": 10,
+            "ItemProcessor": {
+                "ProcessorConfig": {
+                    "Mode": "INLINE"
+                },
+                "StartAt": "WorkerTask",
+                "States": {
+                    "WorkerTask": {
+                        "Type": "Task",
+                        "Resource": "arn:aws:states:::lambda:invoke",
+                        "Parameters": {
+                            "FunctionName": "${worker_lambda_arn}",
+                            "Payload": {
+                                "item.$": "$"
+                            }
+                        },
+                        "ResultSelector": {
+                            "result.$": "$.Payload"
+                        },
+                        "ResultPath": "$",
+                        "Retry": [
+                            {
+                                "ErrorEquals": [
+                                    "Lambda.ServiceException",
+                                    "Lambda.AWSLambdaException",
+                                    "Lambda.SdkClientException"
+                                ],
+                                "IntervalSeconds": 2,
+                                "MaxAttempts": 3,
+                                "BackoffRate": 2
+                            }
+                        ],
+                        "Catch": [
+                            {
+                                "ErrorEquals": [
+                                    "States.ALL"
+                                ],
+                                "ResultPath": "$.error",
+                                "Next": "WorkerError"
+                            }
+                        ],
+                        "End": true
+                    },
+                    "WorkerError": {
+                        "Type": "Pass",
+                        "Result": {
+                            "processed": false,
+                            "error": "Worker failed"
+                        },
+                        "End": true
+                    }
+                }
+            },
+            "ResultPath": "$.workerResults",
+            "Next": "GatherPhase"
+        },
+        "GatherPhase": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "FunctionName": "${aggregator_lambda_arn}",
+                "Payload": {
+                    "results.$": "$.workerResults[*].result"
+                }
+            },
+            "ResultSelector": {
+                "aggregated.$": "$.Payload"
+            },
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2
+                }
+            ],
+            "End": true
+        }
+    }
+}
