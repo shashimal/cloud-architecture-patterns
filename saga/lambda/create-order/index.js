@@ -16,12 +16,13 @@ const docClient = DynamoDBDocumentClient.from(client);
  */
 exports.handler = async (event) => {
     console.log("Creating Order:", event.orderId);
+    const TABLE_NAME = process.env.TABLE_NAME;
 
     // Simulate failure for testing
     if (event.failAt === 'create_order') throw new Error("Order Creation Failed");
 
     const params = {
-        TableName: "orders",
+        TableName: TABLE_NAME,
         Item: {
             order_id: event.orderId,
             status: "PENDING",
