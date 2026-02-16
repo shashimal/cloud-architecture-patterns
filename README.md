@@ -4,4 +4,4 @@ Reference implementations of cloud integration and architecture patterns using A
 
 ## Patterns
 
-See [Scatter-Gather Pattern](scatter-gather/scatter-gather.md) for detailed documentation.
+[Scatter-Gather Pattern](scatter-gather/scatter-gather.md)

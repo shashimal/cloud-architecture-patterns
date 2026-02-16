@@ -1,5 +1,4 @@
-
-######  Worker Lambda service #################
+############   Worker service #################
 ###############################################
 module "worker_service" {
   source  = "terraform-aws-modules/lambda/aws"
@@ -15,7 +14,7 @@ module "worker_service" {
   }
 }
 
-######  Aggregator Lambda service #################
+############  Aggregator service #################
 ###############################################
 module "aggregator_service" {
   source  = "terraform-aws-modules/lambda/aws"
@@ -31,10 +30,9 @@ module "aggregator_service" {
   }
 }
 
-
-######  Scatter service StepFunction #################
-###############################################
-resource "aws_sfn_state_machine" "scatter_service" {
+######  Scatter and Gather service  #################
+#####################################################
+resource "aws_sfn_state_machine" "scatter_gather_service" {
   role_arn   = module.scatter_service_role.arn
     definition = templatefile("${path.module}/step-function/state-machine.asl.json", {
       worker_lambda_arn     = module.worker_service.lambda_function_arn
@@ -42,12 +40,12 @@ resource "aws_sfn_state_machine" "scatter_service" {
     })
 }
 
-######  IAM Role for scatter service StepFunction ##########
+######  IAM role for scatter_gather_service ##########
 ###########################################################
 module "scatter_service_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role"
   version = "~> 6.0"
-  name = "scatter-service-role"
+  name = "scatter-gather-service-role"
 
   trust_policy_permissions = {
     TrustRoleAndServiceToAssume = {
@@ -72,20 +70,8 @@ module "scatter_service_role" {
 }
 
 
-data "aws_iam_policy_document" "step_function_lambda_policy_document" {
-  statement {
-    sid = "LambdaInvokePermission"
-    effect = "Allow"
-    actions = [
-      "lambda:InvokeFunction"
-    ]
-    resources = [
-      module.worker_service.lambda_function_arn,
-      module.aggregator_service.lambda_function_arn
-    ]
-  }
-}
-
+############  IAM policy document for catter-gather-service-role ##########
+############################################################################
 resource "aws_iam_policy" "sfn_function_lambda_policy" {
   name = "sfn-lambda-permission"
   policy = data.aws_iam_policy_document.step_function_lambda_policy_document.json
