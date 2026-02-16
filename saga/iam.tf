@@ -1,7 +1,7 @@
 module "lambda_iam_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role"
   version = "~> 6.0"
-  name    = "scatter-gather-service-role"
+  name    = "common-lambda-role"
 
   trust_policy_permissions = {
     TrustRoleAndServiceToAssume = {

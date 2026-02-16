@@ -22,7 +22,6 @@ module "create_order" {
 
   source_path             = "${path.module}/lambda/create-order"
   local_existing_package  = "${path.module}/lambda/create-order.zip"
-  ignore_source_code_hash = true
 
   create_role = false
   lambda_role = module.lambda_iam_role.arn
