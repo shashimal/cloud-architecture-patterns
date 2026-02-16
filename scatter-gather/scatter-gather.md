@@ -103,37 +103,6 @@ Check the AWS Console:
 - Visual workflow monitoring
 - Cost-effective serverless architecture
 
-
-## Configuration Options
-
-### Adjusting Concurrency
-
-In `step-function/state-machine.json`, modify the `MaxConcurrency` parameter:
-```json
-"MaxConcurrency": 10  // Process up to 10 items in parallel
-```
-
-### Lambda Timeout and Memory
-
-In `main.tf`, adjust Lambda configuration:
-```hcl
-timeout = 30      // Execution timeout in seconds
-memory_size = 128 // Memory in MB (add this parameter)
-```
-
-### Error Handling
-
-The state machine includes:
-- Automatic retries with exponential backoff
-- Error catching to prevent complete failure
-- CloudWatch logging for debugging
-
-## Cost Considerations
-
-- Step Functions: $0.025 per 1,000 state transitions
-- Lambda: Based on execution time and memory
-- CloudWatch Logs: Storage and data ingestion costs
-
 ## Cleanup
 
 To destroy all resources:
@@ -141,68 +110,5 @@ To destroy all resources:
 terraform destroy
 ```
 
-## Customization Examples
 
-### Example 1: Process S3 Files
-Modify worker to process files from S3:
-```javascript
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
 
-exports.handler = async (event) => {
-  const { bucket, key } = event.item;
-  const data = await s3.getObject({ Bucket: bucket, Key: key }).promise();
-  // Process file data
-  return { processed: true, key: key };
-};
-```
-
-### Example 2: API Calls
-Use workers to make parallel API calls:
-```javascript
-const axios = require('axios');
-
-exports.handler = async (event) => {
-  const response = await axios.get(event.item.url);
-  return { url: event.item.url, data: response.data };
-};
-```
-
-### Example 3: Database Operations
-Process database records in parallel:
-```javascript
-const { DynamoDB } = require('aws-sdk');
-const dynamodb = new DynamoDB.DocumentClient();
-
-exports.handler = async (event) => {
-  await dynamodb.put({
-    TableName: 'MyTable',
-    Item: event.item
-  }).promise();
-  return { processed: true, id: event.item.id };
-};
-```
-
-## Troubleshooting
-
-### Issue: Lambda timeout
-- Increase timeout in `main.tf`
-- Optimize worker code
-- Break down large tasks
-
-### Issue: Too many concurrent executions
-- Reduce `MaxConcurrency` in state machine
-- Check Lambda concurrency limits
-
-### Issue: State machine fails
-- Check CloudWatch Logs
-- Verify IAM permissions
-- Test Lambda functions individually
-
-## Next Steps
-
-1. Customize worker logic for your use case
-2. Add monitoring and alerting
-3. Implement DLQ for failed items
-4. Add input validation
-5. Set up CI/CD pipeline
