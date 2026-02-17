@@ -18,3 +18,15 @@ data "aws_iam_policy_document" "lambda_permission" {
     resources = values(aws_dynamodb_table.this)[*].arn
   }
 }
+
+data "aws_iam_policy_document" "sfn_lambda_permission" {
+  statement {
+    sid    = "LambdaInvokePermission"
+    effect = "Allow"
+    actions = [
+      "lambda:InvokeFunction"
+    ]
+    resources = values(module.services)[*].lambda_function_arn
+
+  }
+}

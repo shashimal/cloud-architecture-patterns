@@ -24,7 +24,7 @@ exports.handler = async (event) => {
     const params = {
         TableName: TABLE_NAME,
         Item: {
-            order_id: event.orderId,
+            orderId: event.orderId,
             status: "PENDING",
             amount: event.amount,
             itemId: event.itemId,

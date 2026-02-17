@@ -105,3 +105,13 @@ resource "aws_dynamodb_table" "this" {
     }
   }
 }
+
+resource "aws_sfn_state_machine" "orchestrator" {
+  name = "orchestrator-service"
+  definition = templatefile("${path.module}/order-process.asl.json", {
+    create_order_arn      = module.services["create-order"].lambda_function_arn
+    charge_payment_arn    = module.services["charge-payment"].lambda_function_arn
+    reserve_inventory_arn = module.services["reserve-inventory"].lambda_function_arn
+  })
+  role_arn = module.sfn_iam_role.arn
+}

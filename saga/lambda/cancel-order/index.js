@@ -19,7 +19,7 @@ exports.handler = async (event) => {
 
     const params = {
         TableName: TABLE_NAME,
-        Key: { order_id: event.orderId },
+        Key: { orderId: event.orderId },
         UpdateExpression: "set #s = :s",
         ExpressionAttributeNames: { "#s": "status" },
         ExpressionAttributeValues: { ":s": "CANCELLED" }
