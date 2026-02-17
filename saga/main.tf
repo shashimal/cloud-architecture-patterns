@@ -34,3 +34,27 @@ module "create_order" {
     Name = "Create Order"
   }
 }
+
+#Cancel order service
+module "cancel_order" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 8.0"
+
+  function_name = "cancel-order"
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+
+  source_path             = "${path.module}/lambda/cancel-order"
+  local_existing_package  = "${path.module}/lambda/cancel-order.zip"
+
+  create_role = false
+  lambda_role = module.lambda_iam_role.arn
+
+  environment_variables = {
+    TABLE_NAME = "orders"
+  }
+
+  tags = {
+    Name = "Cancel Order"
+  }
+}
