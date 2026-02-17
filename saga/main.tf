@@ -78,3 +78,23 @@ module "charge_payment" {
     Name = "Charge Payment"
   }
 }
+
+#Charge payment service
+module "refund_payment" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 8.0"
+
+  function_name = "refund-payment"
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+
+  source_path             = "${path.module}/lambda/refund-payment"
+  local_existing_package  = "${path.module}/lambda/refund-payment.zip"
+
+  create_role = false
+  lambda_role = module.lambda_iam_role.arn
+
+  tags = {
+    Name = "Refund Payment"
+  }
+}

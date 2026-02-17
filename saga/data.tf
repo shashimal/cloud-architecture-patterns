@@ -16,6 +16,13 @@ data "archive_file" "charge_payment_zip" {
   output_path = "${path.module}/lambda/charge-payment.zip"
 }
 
+data "archive_file" "refund_payment_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda/refund-payment"
+  output_path = "${path.module}/lambda/refund-payment.zip"
+}
+
+
 data "aws_iam_policy_document" "lambda_permission" {
   statement {
     sid    = "DynamodbPermission"
