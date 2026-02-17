@@ -58,3 +58,23 @@ module "cancel_order" {
     Name = "Cancel Order"
   }
 }
+
+#Charge payment service
+module "charge_payment" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 8.0"
+
+  function_name = "charge-payment"
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+
+  source_path             = "${path.module}/lambda/charge-payment"
+  local_existing_package  = "${path.module}/lambda/charge-payment.zip"
+
+  create_role = false
+  lambda_role = module.lambda_iam_role.arn
+
+  tags = {
+    Name = "Charge Payment"
+  }
+}
