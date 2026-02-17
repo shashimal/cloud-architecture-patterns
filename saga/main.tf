@@ -11,6 +11,17 @@ resource "aws_dynamodb_table" "orders" {
   }
 }
 
+#DynamoDB Table for inventory
+resource "aws_dynamodb_table" "inventory" {
+  name         = "inventory"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "itemId"
+  attribute {
+    name = "itemId"
+    type = "S"
+  }
+}
+
 #Create order service
 module "create_order" {
   source  = "terraform-aws-modules/lambda/aws"
@@ -96,5 +107,53 @@ module "refund_payment" {
 
   tags = {
     Name = "Refund Payment"
+  }
+}
+
+#Reserve inventory service
+module "reserve_inventory" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 8.0"
+
+  function_name = "reserve-inventory"
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+
+  source_path             = "${path.module}/lambda/reserve-inventory"
+  local_existing_package  = "${path.module}/lambda/reserve-inventory.zip"
+
+  create_role = false
+  lambda_role = module.lambda_iam_role.arn
+
+  environment_variables = {
+    TABLE_NAME = "inventory"
+  }
+
+  tags = {
+    Name = "Reserve Inventory"
+  }
+}
+
+#Reserve inventory service
+module "release_inventory" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 8.0"
+
+  function_name = "release-inventory"
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+
+  source_path             = "${path.module}/lambda/release-inventory"
+  local_existing_package  = "${path.module}/lambda/release-inventory.zip"
+
+  create_role = false
+  lambda_role = module.lambda_iam_role.arn
+
+  environment_variables = {
+    TABLE_NAME = "inventory"
+  }
+
+  tags = {
+    Name = "Release Inventory"
   }
 }
