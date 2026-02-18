@@ -15,7 +15,7 @@
                     "ErrorEquals": [
                         "States.ALL"
                     ],
-                    "Output": "{% {\"Payload\": $states.input, \"errorDetails\": $states.errorOutput } %}",
+                    "Output": "{% {\n \"Payload\": $states.input, \"errorDetails\": $states.errorOutput \n } %}",
                     "Next": "CancelOrder"
                 }
             ],
@@ -28,7 +28,6 @@
                 "FunctionName": "${cancel_order_arn}",
                 "Payload": "{% $states.input %}"
             },
-             "Output": "{% $states.result.Payload %}",
             "End": true
         },
         "ChargePayment": {
@@ -38,7 +37,26 @@
                 "FunctionName": "${charge_payment_arn}",
                 "Payload": "{% $states.input %}"
             },
-            "Next": "ReserveInventory"
+            "Next": "ReserveInventory",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "Output": "{% {\n \"Payload\": $states.input, \"errorDetails\": $states.errorOutput \n } %}",
+                    "Next": "RefundPayment"
+                }
+            ]
+        },
+        "RefundPayment": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Output": "{% $states.result.Payload %}",
+            "Arguments": {
+                "FunctionName": "${refund_payment_arn}",
+                "Payload": "{% $states.input %}"
+            },
+            "Next": "CancelOrder"
         },
         "ReserveInventory": {
             "Type": "Task",
@@ -47,7 +65,23 @@
                 "FunctionName": "${reserve_inventory_arn}",
                 "Payload": "{% $states.input %}"
             },
-            "Next": "Success"
+            "Next": "Success",
+            "Catch": [
+                {
+                    "ErrorEquals": ["States.ALL"],
+                    "Next": "ReleaseInventory"
+                }
+            ]
+        },
+        "ReleaseInventory": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Output": "{% $states.result.Payload %}",
+            "Arguments": {
+                "FunctionName": "${release_inventory_arn}",
+                "Payload": "{% $states.input %}"
+            },
+            "Next": "RefundPayment"
         },
         "Success": {
             "Type": "Succeed"
