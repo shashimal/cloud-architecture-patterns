@@ -27,6 +27,6 @@ exports.handler = async (event) => {
     };
 
     await docClient.send(new UpdateCommand(params));
-    return { ... event.Payload, orderStatus: "CANCELLED" };
+    return { ...event.Payload, orderStatus: "CANCELLED" };
 };
 
