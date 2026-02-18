@@ -15,12 +15,12 @@ const docClient = DynamoDBDocumentClient.from(client);
  */
 exports.handler = async (event) => {
     console.log("Compensating: Cancelling Order", event);
-    console.log("Compensating: Cancelling Order", event.originalInput.orderId);
+    console.log("Compensating: Cancelling Order", event.Payload.orderId);
     const TABLE_NAME = process.env.TABLE_NAME;
 
     const params = {
         TableName: TABLE_NAME,
-        Key: { orderId: event.originalInput.orderId },
+        Key: { orderId: event.Payload.orderId },
         UpdateExpression: "set #s = :s",
         ExpressionAttributeNames: { "#s": "status" },
         ExpressionAttributeValues: { ":s": "CANCELLED" }
