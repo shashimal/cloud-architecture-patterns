@@ -14,12 +14,13 @@ const docClient = DynamoDBDocumentClient.from(client);
  * cancel_order: Compensation for CreateOrder. Marks order as CANCELLED.
  */
 exports.handler = async (event) => {
-    console.log("Compensating: Cancelling Order", event.orderId);
+    console.log("Compensating: Cancelling Order", event);
+    console.log("Compensating: Cancelling Order", event.originalInput.orderId);
     const TABLE_NAME = process.env.TABLE_NAME;
 
     const params = {
         TableName: TABLE_NAME,
-        Key: { orderId: event.orderId },
+        Key: { orderId: event.originalInput.orderId },
         UpdateExpression: "set #s = :s",
         ExpressionAttributeNames: { "#s": "status" },
         ExpressionAttributeValues: { ":s": "CANCELLED" }

@@ -15,14 +15,14 @@ const docClient = DynamoDBDocumentClient.from(client);
  * reserve_inventory: Deducts stock from the Inventory table.
  */
 exports.handler = async (event) => {
-    console.log("Reserving Inventory for Item:", event.itemId);
+    console.log("Reserving Inventory for Item:", event);
     const TABLE_NAME = process.env.TABLE_NAME;
 
     if (event.failAt === 'reserve_inventory') throw new Error("Out of Stock");
 
     const params = {
         TableName: TABLE_NAME,
-        Key: { itemId: event.itemId },
+        Key: { itemId: event.Payload.itemId },
         UpdateExpression: "set stock = stock - :val",
         ConditionExpression: "stock >= :val",
         ExpressionAttributeValues: { ":val": 1 }

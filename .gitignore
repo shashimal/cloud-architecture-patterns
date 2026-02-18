@@ -21,3 +21,9 @@ Thumbs.db
 # Logs
 *.log
 /scatter/builds/
+/saga/lambda/cancel-order.zip
+/saga/lambda/charge-payment.zip
+/saga/lambda/create-order.zip
+/saga/lambda/refund-payment.zip
+/saga/lambda/release-inventory.zip
+/saga/lambda/reserve-inventory.zip

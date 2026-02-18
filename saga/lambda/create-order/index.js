@@ -15,7 +15,7 @@ const docClient = DynamoDBDocumentClient.from(client);
  * create_order: Creates a PENDING order in DynamoDB.
  */
 exports.handler = async (event) => {
-    console.log("Creating Order:", event.orderId);
+    console.log("Creating Order:", event);
     const TABLE_NAME = process.env.TABLE_NAME;
 
     // Simulate failure for testing
