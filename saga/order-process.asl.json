@@ -28,6 +28,7 @@
                 "FunctionName": "${cancel_order_arn}",
                 "Payload": "{% $states.input %}"
             },
+             "Output": "{% $states.result.Payload %}",
             "End": true
         },
         "ChargePayment": {
