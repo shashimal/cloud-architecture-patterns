@@ -1,9 +1,12 @@
-/**
- * refund_payment: Compensation for ChargePayment.
- */
 exports.handler = async (event) => {
-    console.log("Compensating: Refunding Transaction", event.transactionId);
-
-    // Logic to call Payment Gateway Refund API
-    return { ...event, paymentStatus: "REFUNDED" };
-};
+    const txId =
+      (event.chargePaymentResult &&
+        event.chargePaymentResult.transactionId) ||
+      "unknown";
+  
+    // In a real system, call your payment provider here
+    return {
+      refunded: true,
+      transactionId: txId
+    };
+  };

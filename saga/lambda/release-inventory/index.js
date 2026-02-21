@@ -1,30 +1,42 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
-    DynamoDBDocumentClient,
-    PutCommand,
-    UpdateCommand,
-    GetCommand
+  DynamoDBDocumentClient,
+  DeleteCommand,
 } = require("@aws-sdk/lib-dynamodb");
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
+const ddbClient = new DynamoDBClient({});
+const ddb = DynamoDBDocumentClient.from(ddbClient);
 
-// --- 3. INVENTORY SERVICE ---
-
-/**
- * release_inventory: Compensation for ReserveInventory. Returns stock.
- */
 exports.handler = async (event) => {
-    console.log("Compensating: Releasing Inventory for Item:", event);
-    const TABLE_NAME = process.env.TABLE_NAME;
+  const table = process.env.TABLE_NAME;
 
-    const params = {
-        TableName: TABLE_NAME,
-        Key: { itemId: event.Payload.itemId },
-        UpdateExpression: "set stock = stock + :val",
-        ExpressionAttributeValues: { ":val": 1 }
-    };
+  const input =
+    (event && event.Payload) ||
+    (event && event.payload) ||
+    (event && event.input) ||
+    event ||
+    {};
 
-    await docClient.send(new UpdateCommand(params));
-    return { ...event.Payload, inventoryStatus: "RELEASED" };
+  const items =
+    input.items ||
+    (input.createOrderResult && input.createOrderResult.items) ||
+    (input.createOrderResult &&
+      input.createOrderResult.Payload &&
+      input.createOrderResult.Payload.items) ||
+    [];
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return { released: true };
+  }
+
+  for (const item of items) {
+    await ddb.send(
+      new DeleteCommand({
+        TableName: table,
+        Key: { itemId: item.id },
+      })
+    );
+  }
+
+  return { released: true };
 };

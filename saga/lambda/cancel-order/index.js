@@ -1,32 +1,27 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
-    DynamoDBDocumentClient,
-    PutCommand,
-    UpdateCommand,
-    GetCommand
+  DynamoDBDocumentClient,
+  UpdateCommand,
 } = require("@aws-sdk/lib-dynamodb");
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
-
-
-/**
- * cancel_order: Compensation for CreateOrder. Marks order as CANCELLED.
- */
+const ddbClient = new DynamoDBClient({});
+const ddb = DynamoDBDocumentClient.from(ddbClient);
 exports.handler = async (event) => {
-    console.log("Compensating: Cancelling Order", event);
-    console.log("Compensating: Cancelling Order", event.Payload.orderId);
-    const TABLE_NAME = process.env.TABLE_NAME;
+  const table = process.env.TABLE_NAME;
 
-    const params = {
-        TableName: TABLE_NAME,
-        Key: { orderId: event.Payload.orderId },
-        UpdateExpression: "set #s = :s",
-        ExpressionAttributeNames: { "#s": "status" },
-        ExpressionAttributeValues: { ":s": "CANCELLED" }
-    };
+  const orderId =
+    event.orderId ||
+    (event.createOrderResult && event.createOrderResult.orderId);
 
-    await docClient.send(new UpdateCommand(params));
-    return { ...event.Payload, orderStatus: "CANCELLED" };
+  await ddb.send(
+    new UpdateCommand({
+      TableName: table,
+      Key: { orderId },
+      UpdateExpression: "SET #s = :s",
+      ExpressionAttributeNames: { "#s": "status" },
+      ExpressionAttributeValues: { ":s": "CANCELLED" },
+    })
+  );
+
+  return { orderId, status: "CANCELLED" };
 };
-

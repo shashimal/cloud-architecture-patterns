@@ -1,40 +1,50 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
-    DynamoDBDocumentClient,
-    PutCommand,
-    UpdateCommand,
-    GetCommand
+  DynamoDBDocumentClient,
+  PutCommand,
 } = require("@aws-sdk/lib-dynamodb");
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
+const ddbClient = new DynamoDBClient({});
+const ddb = DynamoDBDocumentClient.from(ddbClient);
 
-// --- 3. INVENTORY SERVICE ---
-
-/**
- * reserve_inventory: Deducts stock from the Inventory table.
- */
 exports.handler = async (event) => {
-    console.log("Reserving Inventory for Item:", event);
-    const TABLE_NAME = process.env.TABLE_NAME;
+  const table = process.env.TABLE_NAME;
 
-    if (event.failAt === 'reserve_inventory') throw new Error("Out of Stock");
+  const input =
+    (event && event.Payload) ||
+    (event && event.payload) ||
+    (event && event.input) ||
+    event ||
+    {};
 
-    const params = {
-        TableName: TABLE_NAME,
-        Key: { itemId: event.Payload.itemId },
-        UpdateExpression: "set stock = stock - :val",
-        ConditionExpression: "stock >= :val",
-        ExpressionAttributeValues: { ":val": 1 }
-    };
+  const items =
+    input.items ||
+    (input.createOrderResult && input.createOrderResult.items) ||
+    (input.createOrderResult &&
+      input.createOrderResult.Payload &&
+      input.createOrderResult.Payload.items) ||
+    [];
 
-    try {
-        await docClient.send(new UpdateCommand(params));
-        return { ...event, inventoryStatus: "RESERVED" };
-    } catch (err) {
-        if (err.name === "ConditionalCheckFailedException") {
-            throw new Error("Insufficient Inventory Stock");
-        }
-        throw err;
-    }
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error("Missing required 'items' array in event. Expected event.items or event.createOrderResult.items.")
+  }
+
+  // Example: artificially fail if a special item is requested
+  if (items.some((item) => item.id === "OUT_OF_STOCK")) {
+    throw new Error("Inventory not available");
+  }
+
+  for (const item of items) {
+    await ddb.send(
+      new PutCommand({
+        TableName: table,
+        Item: {
+          itemId: item.id,
+          reservedQty: item.qty,
+        },
+      })
+    );
+  }
+
+  return { reserved: true };
 };

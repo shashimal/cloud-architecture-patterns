@@ -108,7 +108,7 @@ resource "aws_dynamodb_table" "this" {
 
 resource "aws_sfn_state_machine" "orchestrator" {
   name = "orchestrator-service"
-  definition = templatefile("${path.module}/order-process.asl.json", {
+  definition = templatefile("${path.module}/order-process2.asl.json", {
     create_order_arn      = module.services["create-order"].lambda_function_arn
     cancel_order_arn      = module.services["cancel-order"].lambda_function_arn
     charge_payment_arn    = module.services["charge-payment"].lambda_function_arn
