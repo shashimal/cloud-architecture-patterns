@@ -27,3 +27,4 @@ Thumbs.db
 /saga/lambda/refund-payment.zip
 /saga/lambda/release-inventory.zip
 /saga/lambda/reserve-inventory.zip
+/saga/lambda/charge-payment.zip
