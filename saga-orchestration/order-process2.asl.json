@@ -1,0 +1,85 @@
+{
+    "Comment": "Order Saga: create order, charge payment, reserve inventory with compensations",
+    "StartAt": "CreateOrder",
+    "States": {
+        "CreateOrder": {
+            "Type": "Task",
+            "Resource": "${create_order_arn}",
+            "ResultPath": "$.createOrderResult",
+            "Next": "ChargePayment",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "CancelOrder"
+                }
+            ]
+        },
+        "ChargePayment": {
+            "Type": "Task",
+            "Resource": "${charge_payment_arn}",
+            "ResultPath": "$.chargePaymentResult",
+            "Next": "ReserveInventory",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "CancelOrder"
+                }
+            ]
+        },
+        "ReserveInventory": {
+            "Type": "Task",
+            "Resource": "${reserve_inventory_arn}",
+            "ResultPath": "$.reserveInventoryResult",
+            "Next": "Success",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.error",
+                    "Next": "RefundAndCancel"
+                }
+            ]
+        },
+        "RefundAndCancel": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "RefundPayment",
+                    "States": {
+                        "RefundPayment": {
+                            "Type": "Task",
+                            "Resource": "${refund_payment_arn}",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "ReleaseInventory",
+                    "States": {
+                        "ReleaseInventory": {
+                            "Type": "Task",
+                            "Resource": "${release_inventory_arn}",
+                            "End": true
+                        }
+                    }
+                }
+            ],
+            "Next": "CancelOrder"
+        },
+        "CancelOrder": {
+            "Type": "Task",
+            "Resource": "${cancel_order_arn}",
+            "End": true
+        },
+        "Success": {
+            "Type": "Succeed"
+        }
+    }
+}
