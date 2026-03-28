@@ -40,3 +40,8 @@ transactional-outbox/lambda/notification-service.zip
 transactional-outbox/lambda/order-service.zip
 transactional-outbox/builds/e2b38fff9534cff0d6f28e8c8bb0bcba1f558ddad2235631bcaa7b1e53664e93.plan.json
 transactional-outbox/builds/e2b38fff9534cff0d6f28e8c8bb0bcba1f558ddad2235631bcaa7b1e53664e93.zip
+/choreography/lambda/fulfillment-service.zip
+/choreography/lambda/inventory-service.zip
+/choreography/lambda/notification-service.zip
+/choreography/lambda/order-service.zip
+/choreography/lambda/payment-service.zip
