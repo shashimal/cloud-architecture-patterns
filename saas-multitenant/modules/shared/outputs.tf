@@ -9,3 +9,6 @@ output "client_id" {
 output "tenant_access_role_arn" {
   value = module.tenant_access_role.arn
 }
+output "apigw_url" {
+  value = aws_api_gateway_stage.prod.invoke_url
+}
