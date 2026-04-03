@@ -40,7 +40,7 @@ data "aws_iam_policy_document" "tenant_access_role_policy_document" {
     condition {
       test     = "ForAllValues:StringLike"
       variable = "dynamodb:LeadingKeys"
-      values   = ["$${aws:PrincipalTag/tenantId}#*"]
+      values   = ["$${aws:PrincipalTag/tenantId}"]
     }
   }
 
@@ -55,11 +55,11 @@ data "aws_iam_policy_document" "tenant_access_role_policy_document" {
       "${aws_dynamodb_table.tenant_data.arn}/index/*",
     ]
 
-    # ForAnyValue:StringNotLike — deny if any key falls outside the tenant's prefix
+    # ForAnyValue:StringNotLike — deny if any key falls outside the tenant's partition
     condition {
       test     = "ForAnyValue:StringNotLike"
       variable = "dynamodb:LeadingKeys"
-      values   = ["$${aws:PrincipalTag/tenantId}#*"]
+      values   = ["$${aws:PrincipalTag/tenantId}"]
     }
   }
 }

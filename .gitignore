@@ -45,3 +45,6 @@ transactional-outbox/builds/e2b38fff9534cff0d6f28e8c8bb0bcba1f558ddad2235631bcaa
 /lambda/notification-service.zip
 /lambda/order-service.zip
 /lambda/payment-service.zip
+/saas-multitenant/modules/shared/api-handler/node_modules/
+/saas-multitenant/builds/
+/choreography/builds/
