@@ -15,15 +15,15 @@ resource "aws_api_gateway_authorizer" "cognito" {
   identity_source = "method.request.header.Authorization"
 }
 
-resource "aws_api_gateway_resource" "proxy" {
+resource "aws_api_gateway_resource" "resource" {
   rest_api_id = aws_api_gateway_rest_api.main.id
   parent_id   = aws_api_gateway_rest_api.main.root_resource_id
   path_part   = "{proxy+}"
 }
 
-resource "aws_api_gateway_method" "proxy_any" {
+resource "aws_api_gateway_method" "method" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
-  resource_id   = aws_api_gateway_resource.proxy.id
+  resource_id   = aws_api_gateway_resource.resource.id
   http_method   = "ANY"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito.id
@@ -34,10 +34,10 @@ resource "aws_api_gateway_method" "proxy_any" {
   }
 }
 
-resource "aws_api_gateway_integration" "lambda_proxy" {
+resource "aws_api_gateway_integration" "lambda" {
   rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = aws_api_gateway_resource.proxy.id
-  http_method = aws_api_gateway_method.proxy_any.http_method
+  resource_id = aws_api_gateway_resource.resource.id
+  http_method = aws_api_gateway_method.method.http_method
   integration_http_method = "POST"          # Lambda invoke is always POST
   type        = "AWS_PROXY"
   uri         = module.backend_lambda.lambda_function_invoke_arn
@@ -59,17 +59,17 @@ resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
 
   depends_on = [
-    aws_api_gateway_method.proxy_any,
-    aws_api_gateway_integration.lambda_proxy,
+    aws_api_gateway_method.method,
+    aws_api_gateway_integration.lambda,
   ]
 
   # Force a new deployment when the integration config changes.
   # Without this, Terraform may skip re-deployment after integration updates.
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.proxy.id,
-      aws_api_gateway_method.proxy_any.id,
-      aws_api_gateway_integration.lambda_proxy.id,
+      aws_api_gateway_resource.resource.id,
+      aws_api_gateway_method.method.id,
+      aws_api_gateway_integration.lambda.id,
     ]))
   }
 
@@ -83,30 +83,6 @@ resource "aws_api_gateway_stage" "prod" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   deployment_id = aws_api_gateway_deployment.main.id
   stage_name    = var.environment
-
-  # Enable X-Ray tracing at the API GW layer as well
-  xray_tracing_enabled = true
-
-  # Access logging — one log group for all tenants at the API GW level.
-  # Per-tenant filtering is done via Log Insights using the tenantId field
-  # emitted by the Lambda structured logs.
-  # access_log_settings {
-  #   destination_arn = aws_cloudwatch_log_group.apigw_access_logs.arn
-  #   format = jsonencode({
-  #     requestId      = "$context.requestId"
-  #     ip             = "$context.identity.sourceIp"
-  #     caller         = "$context.identity.caller"
-  #     user           = "$context.identity.user"
-  #     requestTime    = "$context.requestTime"
-  #     httpMethod     = "$context.httpMethod"
-  #     resourcePath   = "$context.resourcePath"
-  #     status         = "$context.status"
-  #     protocol       = "$context.protocol"
-  #     responseLength = "$context.responseLength"
-  #     # Cognito claims injected by the authorizer
-  #     tenantId       = "$context.authorizer.claims.custom:tenantId"
-  #   })
-  # }
 
   tags = {
     Name = "${local.prefix}-api-stage"
