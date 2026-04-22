@@ -76,3 +76,35 @@ resource "aws_iam_policy" "sfn_function_lambda_policy" {
   name   = "sfn-lambda-permission"
   policy = data.aws_iam_policy_document.step_function_lambda_policy_document.json
 }
+
+######  S3 Bucket for scatter-gather results  ##############################
+############################################################################
+module "scatter_gather_bucket" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "~> 4.0"
+
+  bucket = "scatter-gather-results"
+
+  force_destroy = true
+
+  versioning = {
+    enabled = true
+  }
+
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+
+  tags = {
+    Name = "Scatter Gather Results Bucket"
+  }
+}
